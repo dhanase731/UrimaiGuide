@@ -35,7 +35,7 @@ export function ComplianceEnforcement() {
           status: "PENDING" as DirectionStatus,
         }))
       : [
-          { id: "ci1", direction: `Refund ₹${caseData.transaction_amount.toLocaleString("en-IN")} with 9% interest p.a. from date of purchase`, deadline: new Date(Date.now() + 45 * 86400000).toISOString().split("T")[0], status: "PENDING" as DirectionStatus },
+          { id: "ci1", direction: `Refund ₹${(caseData.transaction_amount || 0).toLocaleString("en-IN")} with 9% interest p.a. from date of purchase`, deadline: new Date(Date.now() + 45 * 86400000).toISOString().split("T")[0], status: "PENDING" as DirectionStatus },
           { id: "ci2", direction: "Pay ₹5,000 as compensation for mental agony and harassment", deadline: new Date(Date.now() + 45 * 86400000).toISOString().split("T")[0], status: "PENDING" as DirectionStatus },
           { id: "ci3", direction: "Pay ₹2,000 as litigation costs", deadline: new Date(Date.now() + 45 * 86400000).toISOString().split("T")[0], status: "PENDING" as DirectionStatus },
         ]

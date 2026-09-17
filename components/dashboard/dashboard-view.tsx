@@ -78,7 +78,7 @@ export function DashboardView() {
               <div>
                 <p className="text-xs text-muted-foreground">Category</p>
                 <p className="text-sm font-semibold text-ink-900">
-                  {caseData.primary_case_type_label || caseData.primary_case_type.replace(/_/g, " ") || "—"}
+                  {caseData.primary_case_type_label || caseData.primary_case_type?.replace(/_/g, " ") || "—"}
                 </p>
               </div>
             </div>

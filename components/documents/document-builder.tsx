@@ -475,6 +475,7 @@ export function DocumentBuilder() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => typeof window !== "undefined" && window.print()}
                   className="inline-flex items-center gap-1 rounded-md border border-softborder px-2.5 py-1.5 text-xs font-semibold text-ink-700 transition-colors hover:bg-bluesoft"
                 >
                   <Download className="h-3.5 w-3.5" />

@@ -14,6 +14,9 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  experimental: {
+    cpus: 2,
+  },
 }
 
 export default nextConfig

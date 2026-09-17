@@ -31,6 +31,13 @@ export function ProfileView() {
     router.push("/")
   }
 
+  function handleDeleteAccount() {
+    if (typeof window !== "undefined" && window.confirm("Are you sure you want to delete your account and purge all case data? This action cannot be undone.")) {
+      reset()
+      router.push("/")
+    }
+  }
+
   const maskedMobile = user.mobile_number
     ? `XXXXXX${user.mobile_number.slice(-4)}`
     : "XXXXXXXXXX"
@@ -173,6 +180,7 @@ export function ProfileView() {
           </button>
           <button
             type="button"
+            onClick={handleDeleteAccount}
             className="inline-flex items-center gap-1.5 rounded-md border border-danger-ink px-4 py-2.5 text-sm font-semibold text-danger-ink transition-colors hover:bg-danger-ink hover:text-parchment"
           >
             <Trash2 className="h-4 w-4" />

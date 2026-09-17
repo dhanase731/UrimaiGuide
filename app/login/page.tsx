@@ -12,8 +12,8 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-dvh flex-col bg-parchment">
       <header className="border-b border-softborder">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-          <Link href="/" className="flex items-center gap-3">
+        <div className="flex w-full items-center justify-between gap-4 px-6 md:px-10 py-3">
+          <Link href="/" className="flex shrink-0 items-center gap-3">
             <Image
               src="/urimai-emblem.png"
               alt="Urimai emblem"

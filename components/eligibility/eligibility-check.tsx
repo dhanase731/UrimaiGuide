@@ -7,11 +7,18 @@ import { useCaseContext } from "@/lib/case-context"
 
 function parseDateStr(s: string): Date | null {
   if (!s) return null
-  // Try DD/MM/YYYY
-  const parts = s.split("/")
+  // Try DD/MM/YYYY or DD-MM-YYYY
+  const parts = s.split(/[\/\-]/)
   if (parts.length === 3) {
-    const d = new Date(`${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`)
-    if (!isNaN(d.getTime())) return d
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      const d = new Date(s)
+      if (!isNaN(d.getTime())) return d
+    } else {
+      // DD-MM-YYYY or DD/MM/YYYY
+      const d = new Date(`${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`)
+      if (!isNaN(d.getTime())) return d
+    }
   }
   const d = new Date(s)
   return isNaN(d.getTime()) ? null : d
