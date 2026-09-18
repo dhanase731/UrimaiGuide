@@ -26,7 +26,11 @@ interface TwilioRestError extends Error {
   details?: unknown
 }
 
-function mapTwilioError(err: unknown, fallbackMessage: string): { message: string; code?: number } {
+function mapTwilioError(
+  err: unknown,
+  fallbackMessage: string,
+  context: "send" | "verify" = "send"
+): { message: string; code?: number } {
   if (!err || typeof err !== "object") {
     return { message: fallbackMessage }
   }
@@ -48,6 +52,12 @@ function mapTwilioError(err: unknown, fallbackMessage: string): { message: strin
           "This phone number is unverified on your Twilio Trial account. Please verify the destination number in Twilio Console or upgrade your Twilio account.",
         code: twCode,
       }
+    case 20003:
+      return {
+        message:
+          "Twilio authentication failed. Please check your TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in environment variables.",
+        code: twCode,
+      }
     case 60202:
       return {
         message: "Maximum verification check attempts reached. Please request a new OTP code.",
@@ -60,7 +70,10 @@ function mapTwilioError(err: unknown, fallbackMessage: string): { message: strin
       }
     case 20404:
       return {
-        message: "Verification code has expired or was not found. Please request a new OTP.",
+        message:
+          context === "send"
+            ? "Twilio Verify Service not found. Please verify that TWILIO_VERIFY_SERVICE_SID exists in your active Twilio Account."
+            : "Verification code has expired or was not found. Please request a new OTP.",
         code: twCode,
       }
     case 60212:
@@ -112,7 +125,7 @@ export async function sendOtp(phone: string): Promise<SendOtpResult> {
     }
   } catch (error: unknown) {
     console.error("[Twilio sendOtp Error]:", error)
-    const { message, code } = mapTwilioError(error, "Failed to send OTP. Please try again.")
+    const { message, code } = mapTwilioError(error, "Failed to send OTP. Please try again.", "send")
     return {
       success: false,
       message,
@@ -175,7 +188,8 @@ export async function verifyOtp(phone: string, code: string): Promise<VerifyOtpR
     console.error("[Twilio verifyOtp Error]:", error)
     const { message, code } = mapTwilioError(
       error,
-      "Verification failed. The code may be invalid or expired."
+      "Verification failed. The code may be invalid or expired.",
+      "verify"
     )
     return {
       success: false,
