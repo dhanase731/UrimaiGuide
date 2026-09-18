@@ -214,6 +214,7 @@ export function HearingPrepView() {
       )}
 
       <button type="button"
+        onClick={() => typeof window !== "undefined" && window.print()}
         className="inline-flex items-center justify-center gap-2 rounded-md border border-ink-900 px-6 py-3 text-sm font-bold text-ink-900 transition-colors hover:bg-ink-900 hover:text-parchment">
         <Download className="h-4 w-4" />
         Download offline hearing cheat-sheet (.PDF)

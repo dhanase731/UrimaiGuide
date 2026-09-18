@@ -95,7 +95,7 @@ export function TasksView() {
   function toggleTask(id: string) {
     const task = tasks.find((t) => t.task_id === id)
     if (!task) return
-    updateTask(id, { status: task.status === "COMPLETED" ? "PENDING" : "COMPLETED" })
+    updateTask(id, { status: task.status === "COMPLETED" ? (task.days_until_deadline < 0 ? "OVERDUE" : "PENDING") : "COMPLETED" })
   }
 
   function handleAddTask() {
