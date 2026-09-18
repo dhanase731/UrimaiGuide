@@ -28,6 +28,8 @@ export function RegisterForm() {
   const [otpStage, setOtpStage] = useState<OtpStage>("idle")
   const [otpInput, setOtpInput] = useState("")
   const [otpError, setOtpError] = useState("")
+  const [sendingOtp, setSendingOtp] = useState(false)
+  const [verifyingOtp, setVerifyingOtp] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   function update<K extends keyof RegistrationForm>(key: K, value: RegistrationForm[K]) {
@@ -35,23 +37,73 @@ export function RegisterForm() {
     setErrors((prev) => ({ ...prev, [key]: undefined }))
   }
 
-  function sendOtp() {
+  async function sendOtp() {
     if (!/^\d{10}$/.test(form.mobile_number)) {
       setErrors((prev) => ({ ...prev, mobile_number: "Enter a 10-digit mobile number, no country code." }))
       return
     }
-    setOtpStage("sent")
+
+    setSendingOtp(true)
     setOtpError("")
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: `+91${form.mobile_number}` }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        setOtpError(data.error || "Failed to send OTP. Please try again.")
+        setErrors((prev) => ({ ...prev, mobile_number: data.error }))
+        return
+      }
+
+      setOtpStage("sent")
+      setOtpError("")
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error. Please try again."
+      setOtpError(msg)
+    } finally {
+      setSendingOtp(false)
+    }
   }
 
-  function verifyOtp() {
-    if (!/^\d{6}$/.test(otpInput)) {
-      setOtpError("Enter the 6-digit code sent to your mobile.")
+  async function verifyOtp() {
+    if (!/^\d{4,10}$/.test(otpInput.trim())) {
+      setOtpError("Enter the verification code sent to your mobile.")
       return
     }
-    setOtpStage("verified")
+
+    setVerifyingOtp(true)
     setOtpError("")
-    update("otp_verified", true)
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: `+91${form.mobile_number}`,
+          code: otpInput.trim(),
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.success || !data.verified) {
+        setOtpError(data.error || "Invalid verification code.")
+        return
+      }
+
+      setOtpStage("verified")
+      setOtpError("")
+      update("otp_verified", true)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error. Please try again."
+      setOtpError(msg)
+    } finally {
+      setVerifyingOtp(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -115,9 +167,22 @@ export function RegisterForm() {
               />
             </div>
             {otpStage !== "verified" && (
-              <button type="button" onClick={sendOtp}
-                className="rounded-md border border-ink-900 px-4 py-2.5 text-sm font-semibold text-ink-900 transition-colors hover:bg-ink-900 hover:text-parchment">
-                {otpStage === "sent" ? "Resend OTP" : "Send OTP"}
+              <button
+                type="button"
+                onClick={sendOtp}
+                disabled={sendingOtp}
+                className="inline-flex items-center justify-center gap-1.5 rounded-md border border-ink-900 px-4 py-2.5 text-sm font-semibold text-ink-900 transition-colors hover:bg-ink-900 hover:text-parchment disabled:opacity-60"
+              >
+                {sendingOtp ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending…
+                  </>
+                ) : otpStage === "sent" ? (
+                  "Resend OTP"
+                ) : (
+                  "Send OTP"
+                )}
               </button>
             )}
           </div>
@@ -125,19 +190,44 @@ export function RegisterForm() {
 
           {otpStage === "sent" && (
             <div className="mt-4 rounded-lg border border-amber-ink/30 bg-amber-soft p-4">
-              <label htmlFor="otp" className="mb-1.5 block text-sm font-semibold text-ink-900">Enter 6-digit OTP</label>
-              <p className="mb-2 text-xs text-ink-700">Sent via MSG91 to +91 {form.mobile_number}. (Prototype: enter any 6 digits.)</p>
+              <label htmlFor="otp" className="mb-1.5 block text-sm font-semibold text-ink-900">
+                Enter verification code
+              </label>
+              <p className="mb-2 text-xs text-ink-700">
+                Sent via SMS to +91 {form.mobile_number} via Twilio Verify.
+              </p>
               <div className="flex flex-col gap-2 sm:flex-row">
-                <input id="otp" inputMode="numeric" placeholder="______" value={otpInput}
-                  onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="flex-1 rounded-md border border-softborder bg-card px-3 py-2.5 text-center text-lg tracking-[0.5em] text-ink-900 outline-none focus:border-ink-800"
+                <input
+                  id="otp"
+                  inputMode="numeric"
+                  placeholder="______"
+                  value={otpInput}
+                  disabled={verifyingOtp}
+                  onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  className="flex-1 rounded-md border border-softborder bg-card px-3 py-2.5 text-center text-lg tracking-[0.5em] text-ink-900 outline-none focus:border-ink-800 disabled:text-muted-foreground"
                 />
-                <button type="button" onClick={verifyOtp}
-                  className="rounded-md bg-ink-900 px-5 py-2.5 text-sm font-semibold text-parchment transition-colors hover:bg-ink-800">
-                  Verify
+                <button
+                  type="button"
+                  onClick={verifyOtp}
+                  disabled={verifyingOtp}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-ink-900 px-5 py-2.5 text-sm font-semibold text-parchment transition-colors hover:bg-ink-800 disabled:opacity-60"
+                >
+                  {verifyingOtp ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Verifying…
+                    </>
+                  ) : (
+                    "Verify"
+                  )}
                 </button>
               </div>
-              {otpError && <p className={err}><AlertCircle className="h-3 w-3 shrink-0" />{otpError}</p>}
+              {otpError && (
+                <p className={err}>
+                  <AlertCircle className="h-3 w-3 shrink-0" />
+                  {otpError}
+                </p>
+              )}
             </div>
           )}
           {otpStage === "verified" && (

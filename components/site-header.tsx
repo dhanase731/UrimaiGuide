@@ -11,7 +11,7 @@ const NAV_LINKS = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-softborder bg-parchment/85 backdrop-blur">
-      <div className="flex w-full items-center justify-between gap-4 px-6 md:px-10 py-3">
+      <div className="flex h-16 w-full items-center justify-between gap-4 px-6 md:px-10">
         <Link href="/" className="flex shrink-0 items-center gap-3">
           <Image
             src="/urimai-emblem.png"
