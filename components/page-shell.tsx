@@ -33,17 +33,17 @@ export function PageShell({
   return (
     <main className="min-h-dvh bg-parchment">
       <header className="sticky top-0 z-40 border-b border-softborder bg-parchment/85 backdrop-blur">
-        <div className="flex w-full items-center justify-between gap-4 px-6 md:px-10 py-3">
+        <div className="flex h-16 w-full items-center justify-between gap-4 px-6 md:px-10">
           <Link href="/" className="flex shrink-0 items-center gap-3">
             <Image
               src="/urimai-emblem.png"
               alt="Urimai emblem"
-              width={36}
-              height={36}
-              className="h-9 w-9 object-contain"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
             />
             <span className="flex flex-col leading-none">
-              <span className="font-serif text-base font-bold tracking-tight text-ink-900">URIMAI</span>
+              <span className="font-serif text-lg font-bold tracking-tight text-ink-900">URIMAI</span>
               <span className="font-tamil text-xs text-amber-ink">உரிமை</span>
             </span>
           </Link>
