@@ -7,7 +7,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url))
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["lib/eligibility/__tests__/**/*.test.ts"],
+    include: ["lib/**/__tests__/**/*.test.ts"],
     exclude: ["node_modules/**", ".next/**"],
   },
   resolve: {

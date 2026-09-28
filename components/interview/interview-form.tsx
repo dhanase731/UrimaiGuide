@@ -84,6 +84,11 @@ const T = {
     TAMIL:   "AI சேவை தற்காலிகமாக கிடைக்கவில்லை — வழிகாட்டும் கேள்விகளை பயன்படுத்துகிறோம்.",
     HINDI:   "AI सेवा अस्थायी रूप से अनुपलब्ध — निर्देशित प्रश्नों का उपयोग किया जा रहा है।",
   },
+  aiRateLimited: {
+    ENGLISH: "AI is experiencing a brief rate limit — answering with guided questions for this turn.",
+    TAMIL:   "AI வீத வரம்பு எட்டப்பட்டது — இந்த முறைக்கு வழிகாட்டும் கேள்விகளை பயன்படுத்துகிறோம்.",
+    HINDI:   "AI दर सीमा समाप्त — इस बारी के लिए निर्देशित प्रश्नों का उपयोग किया जा रहा है।",
+  },
   fallbackMode:  { ENGLISH: "Guided interview", TAMIL: "வழிகாட்டப்பட்ட நேர்காணல்", HINDI: "निर्देशित साक्षात्कार" },
   geminiMode:    { ENGLISH: "AI interview", TAMIL: "AI நேர்காணல்", HINDI: "AI साक्षात्कार" },
   question:      { ENGLISH: "Question", TAMIL: "கேள்வி", HINDI: "प्रश्न" },
@@ -193,6 +198,7 @@ export function InterviewForm() {
   const [speechSupported, setSpeechSupported] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recRef = useRef<any>(null)
+  const isSubmittingRef = useRef(false)
 
   // Speech support detection (post-mount only — avoids SSR mismatch)
   useEffect(() => {
@@ -267,7 +273,7 @@ export function InterviewForm() {
   async function handleSubmitAnswer(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = answer.trim()
-    if (!trimmed || loading) return
+    if (!trimmed || loading || isSubmittingRef.current) return
 
     // 1. Reject obvious junk immediately
     if (isJunkInput(trimmed)) {
@@ -284,6 +290,7 @@ export function InterviewForm() {
       }
     }
 
+    isSubmittingRef.current = true
     setLoading(true)
     setAiError("")
 
@@ -307,12 +314,20 @@ export function InterviewForm() {
         } satisfies InterviewTurnRequest),
       })
 
+      if (res.status === 429) {
+        setAiMode("fallback")
+        setAiError(t("aiRateLimited", language))
+        applyFallback(trimmed, nextMissing)
+        return
+      }
+
       if (res.status === 503) {
         setAiMode("fallback")
         setAiError(t("aiNotConfigured", language))
         applyFallback(trimmed, nextMissing)
         return
       }
+
       if (!res.ok) {
         setAiMode("fallback")
         setAiError(t("aiError", language))
@@ -329,6 +344,7 @@ export function InterviewForm() {
       setAiError(t("aiError", language))
       applyFallback(trimmed, nextMissing)
     } finally {
+      isSubmittingRef.current = false
       setLoading(false)
       setAnswer("")
     }
